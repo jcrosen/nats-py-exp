@@ -33,7 +33,7 @@ class TestBlockingManagedPubsub(TestCase):
             nonlocal received
             with pubsub.BlockingManagedPubsub() as _pubsub:
                 _pubsub.subscribe(subject, _handler)
-                _pubsub.client.wait(count=2)
+                _pubsub.client.wait(count=3)
 
         t = threading.Thread(target=subscriber)
         t.start()
@@ -46,9 +46,12 @@ class TestBlockingManagedPubsub(TestCase):
         # Test the utility wrapper
         pubsub.blocking_publish(subject, data)
 
+        # Test the wrapped wrapper
+        pubsub.generate_blocking_publisher(subject)(data)
+
         t.join()
 
-        assert len(received) == 2
+        assert len(received) == 3
 
 
 # TODO
