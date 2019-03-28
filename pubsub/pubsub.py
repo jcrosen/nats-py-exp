@@ -18,9 +18,7 @@ def generate_blocking_client(host=DEFAULT_HOST, port=DEFAULT_PORT):
     return client
 
 
-def blocking_publish(
-    subject, data=b'', reply='', client=None
-):
+def blocking_publish(subject, data=b'', reply='', client=None):
     """
     Publish to a NATS subject with a blocking publisher
     """
@@ -28,9 +26,7 @@ def blocking_publish(
         pubsub.publish(subject, data=data, reply=reply)
 
 
-def generate_blocking_publisher(
-    subject, reply='', client=None
-):
+def generate_blocking_publisher(subject, reply='', client=None):
     """
     Return a wrapping function around `blocking_publish` which accepts a payload
     """
@@ -101,9 +97,7 @@ class BlockingManagedPubsub(object):
         del self._subs[subscription.sid]
 
 
-async def generate_async_client(
-    host=DEFAULT_HOST, port=DEFAULT_PORT
-):
+async def generate_async_client(host=DEFAULT_HOST, port=DEFAULT_PORT):
     client = AsyncNATSClient()
     await client.connect('nats://{}:{}'.format(host, port))
     return client
@@ -157,8 +151,6 @@ class ManagedAsyncPubsub(object):
         return await self.client.unsubscribe(sid)
 
 
-async def async_publish(
-    subject, data=b'', reply='', client=None
-):
-    with ManagedAsyncPubsub(client=client) as pubsub:
-        pubsub.publish(subject, data=data, reply=reply)
+async def async_publish(subject, data=b'', reply='', client=None):
+    async with ManagedAsyncPubsub(client=client) as pubsub:
+        await pubsub.publish(subject, data=data, reply=reply)
