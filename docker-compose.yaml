@@ -1,0 +1,72 @@
+version: '3.7'
+services:
+  ## NATS services
+  nats:
+    image: nats:1.4.1-linux
+    ports:
+      - ${NATS_CLIENT_PORT}:${NATS_CLIENT_PORT}
+      - ${NATS_MANAGE_PORT}:${NATS_MANAGE_PORT}
+
+  nats-streaming:
+    image: nats-streaming:0.12.2-linux
+    command: nats-streaming-server -p ${NATS_STREAMING_CLIENT_PORT} -m ${NATS_STREAMING_MANAGE_PORT}
+    ports:
+      - ${NATS_STREAMING_CLIENT_PORT}:${NATS_STREAMING_CLIENT_PORT}
+      - ${NATS_STREAMING_MANAGE_PORT}:${NATS_STREAMING_MANAGE_PORT}
+
+  ## Pubsub services
+  # Builds
+  pubsub-base:
+    build:
+      context: .
+      target: base
+    image: ${IMAGE_ORG_NAME}/pubsub-base
+
+  pubsub-http:
+    build:
+      context: .
+      target: http
+    image: ${IMAGE_ORG_NAME}/pubsub-http
+
+  pubsub-dev:
+    build:
+      context: .
+      target: dev
+    image: ${IMAGE_ORG_NAME}/pubsub-dev
+
+  # Utilities
+  pubsub-console:
+    image: ${IMAGE_ORG_NAME}/pubsub-base:${PUBSUB_BASE_VERSION}
+    command: python -i
+    volumes:
+      - ./pubsub:/project/run/pubsub
+
+  pubsub-scripts:
+    image: ${IMAGE_ORG_NAME}/pubsub-base:${PUBSUB_BASE_VERSION}
+    command: /bin/bash
+    volumes:
+      - ./pubsub:/project/run/pubsub
+      - ./scripts:/project/run/scripts
+
+  pubsub-ipdb:
+    image: ${IMAGE_ORG_NAME}/pubsub-dev:${PUBSUB_DEV_VERSION}
+    volumes:
+      - ./dev:/home/pubsub
+      - ./pubsub:/project/run/pubsub
+      - ./scripts:/project/run/scripts
+
+  pubsub-http-api:
+    image: ${IMAGE_ORG_NAME}/pubsub-http:${PUBSUB_HTTP_VERSION}
+    command: flask run --host 0.0.0.0
+    volumes:
+      - ./pubsub:/project/run/pubsub
+      - ./api:/project/run/api
+    ports:
+      - 5005:5000
+
+  pubsub-test:
+    image: ${IMAGE_ORG_NAME}/pubsub-base:${PUBSUB_BASE_VERSION}
+    command: python -m unittest -vf
+    volumes:
+      - ./pubsub:/project/run/pubsub
+      - ./test:/project/run/test
